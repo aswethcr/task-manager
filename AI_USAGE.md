@@ -1,48 +1,54 @@
-# AI Usage Report
+# AI Usage Summary
 
 ## 1. AI Tools Used
-- **Antigravity** (Google DeepMind) powered by Gemini 3.8 Flash.
 
----
+- **Google Antigravity** (AI coding agent, Gemini model): generated the project scaffold, app code, Firestore rules and initial documentation.
+- **Claude (Anthropic)**: used to write and refine the prompt for Antigravity, and to troubleshoot setup, Firebase configuration, deployment and documentation.
 
 ## 2. How I Used Them
-- **Project Scaffolding**: Initialized the project structure directly within the root directory with React and Vite, configuring the exact package name `task-manager`.
-- **Firebase Authentication & Firestore Architecture**: Implemented Google Auth popup workflow, real-time Firestore synchronization with snapshot listeners, and strict user-scoped task filtering.
-- **Security Rules Generation**: Generated production-ready `firestore.rules` preventing unauthorized cross-user reads/writes and enforcing title length and status schema constraints.
-- **UI/UX Development**: Crafted responsive layouts, accessible status badges, dynamic dropdown updates, loading spinners, empty states, and error handling.
-- **Automated Verification**: Ran dependency builds and build verifications to ensure clean production builds without compilation errors.
 
----
+1. Read the assessment and identified gaps in the requirements (data ownership, task fields, default status, validation, empty and error states, ordering).
+2. Used Claude to turn those decisions into a compact prompt, since Antigravity tokens were limited.
+3. Ran the prompt in Antigravity to scaffold a React + Vite app with Firebase Auth (Google) and Firestore.
+4. Created the Firebase project, enabled Google sign-in, created Firestore and published the security rules myself.
+5. Used Claude to debug the login error and to plan GitHub and Vercel deployment.
+6. Reviewed and tested the app manually: sign in, create task, change status, refresh, sign out and sign in again.
 
 ## 3. Example Prompts
-Below are representative prompts used during development:
 
-```text
-The workspace folder is currently empty. Scaffold the project directly in the workspace root (do not create a nested subfolder). Skip any "reuse existing code" step.
-Use "task-manager" as the package name in package.json (do not derive it from the folder name). Task: Build a minimal Task Management web app. Keep scope small. Do NOT add extra features.
+**Prompt given to Antigravity (shortened):**
 
-STACK:
-- React + Vite
-- Firebase Authentication (Google Sign-In) + Firestore
-- Deploy to Firebase Hosting (or Vercel)
-
-REQUIRED FEATURES ONLY:
-1. Sign in with Google (and Sign out)
-2. Create a task
-3. View list of tasks
-4. Update task status: Planned / In Progress / Complete
+```
+Build a minimal Task Management web app. Keep scope small, do NOT add extra features.
+Stack: React + Vite, Firebase Auth (Google Sign-In), Firestore.
+Features: Google sign in/out, create task, view task list, update status
+(Planned / In Progress / Complete).
+Decisions: title required (max 100 chars, trimmed), default status Planned,
+each user sees only their own tasks (Firestore rules on userId), newest first,
+status dropdown with colored badges, loading/empty/error states,
+prevent double submit, keys in .env with .env.example, firestore.rules file.
+Also create README.md and AI_USAGE.md.
 ```
 
----
+**Prompts used with Claude (examples):**
 
-## 4. AI-Generated Code I Modified/Corrected Manually
+- "Provide me the prompt to paste in Antigravity, I have limited tokens."
+- "The app shows 'Failed to sign in with Google Firebase. Please check your .env credentials.' Help me fix it."
+- "Give me the steps to deploy on Vercel."
 
-*Please fill in the details below with any manual adjustments, overrides, or custom configurations you made:*
+## 4. AI-Generated Code I Modified or Corrected Manually
 
-- **Component / File modified**: `src/App.jsx` & `src/firebase.js`
-  - *Details*: Added environment resilience with an out-of-the-box local testing mode when placeholder/dummy Firebase credentials are in `.env`, allowing all 4 core features (Sign in, Create task, View list, Update status) to be tested immediately without blocking on Firebase project setup.
-- **Component / File modified**: [Placeholder: e.g., Adjusted styling / changed Firebase config keys / tweaked validation]
-  - *Details*: [Placeholder]
-- **Component / File modified**: [Placeholder: Any additional manual revisions]
-  - *Details*: [Placeholder]
+Fill in or edit these with your own experience before submitting.
 
+| Issue | What the AI produced | What I changed |
+|---|---|---|
+| App showed "Local Dev Mode" | The app fell back to a mock login when Firebase keys were missing | Created a Firebase project and added the real keys to `.env`, then restarted the dev server |
+| "Failed to sign in with Google" error | The generic error message pointed at `.env` credentials, but the keys were correct | Found the real cause: the Google provider was not enabled in Firebase Authentication. Enabled it |
+| `.env.example` contained real keys | Real project keys were written into the example file | Replaced them with placeholder values so no project config is exposed in the repo |
+| Deployment configuration | `.env` is not pushed to GitHub, so the build had no keys on Vercel | Added the `VITE_FIREBASE_*` variables in Vercel during import |
+| Google login failed on the live Vercel site | The same generic "check your .env credentials" error appeared even though the keys were correct | Added `task-manager-frxe.vercel.app` to Firebase Authentication, Settings, Authorized domains. Login then worked |
+| _Add your own_ | | |
+
+## 5. Reflection
+
+AI tools sped up scaffolding and documentation, but I still had to verify configuration, test every flow, read the error messages carefully, and fix issues the generated code could not know about (cloud console settings, domains, environment variables).

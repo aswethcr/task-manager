@@ -1,133 +1,129 @@
 # Task Manager
 
-A minimal, clean, and distraction-free Task Management web application built with React, Vite, Firebase Authentication (Google Sign-In), and Cloud Firestore.
+A minimal task management web app. Users sign in with Google, create tasks, view their task list, and update each task's status (Planned, In Progress, Complete).
 
-- **Live URL**: `https://<YOUR-FIREBASE-PROJECT-ID>.web.app` *(Placeholder - deploy using steps below)*
+- **Live app:** https://task-manager-frxe.vercel.app
+- **Source code:** https://github.com/aswethcr/task-manager
 
----
+## Tech Stack
 
-## 1. What the App Does
-
-- **Google Sign-In & Sign-Out**: Secure authentication with Google popup flow.
-- **Task Creation**: Add tasks with titles up to 100 characters.
-- **Task Tracking**: View tasks ordered newest-first with timestamps and status badges.
-- **Status Updates**: Quickly switch task statuses between `Planned`, `In Progress`, and `Complete` with immediate visual updates.
-- **Private Data Storage**: Each user's tasks are stored securely in Firestore and strictly isolated to their Google account.
+- React + Vite
+- Firebase Authentication (Google Sign-In)
+- Cloud Firestore (database)
+- Vercel (hosting)
 
 ---
 
-## 2. How to Access and Use It
+## 1. How to Access and Use the App
 
-1. Open the application URL in any modern browser.
-2. Sign in with your Google account.
-3. In the input box at the top, type your task description (up to 100 characters) and click **Add Task** (or press Enter).
-4. Update a task's status at any time by selecting `Planned`, `In Progress`, or `Complete` from the dropdown selector on the task item.
-5. Sign out when finished by clicking the **Sign Out** button in the header.
+1. Open the live URL above in any modern browser (Chrome, Edge, Firefox, Safari).
+2. Sign in with your Google account (see Login Instructions).
+3. **Create a task:** type a title in the input box and click **Add Task**. New tasks start as **Planned**.
+4. **View tasks:** your tasks appear in a list, newest first. Each task shows its title and a colored status badge.
+5. **Update status:** use the dropdown on a task to switch between **Planned**, **In Progress** and **Complete**. The change saves automatically.
+6. **Sign out:** click the logout button next to your name in the header.
 
----
+## 2. Login Instructions
 
-## 3. Login Instructions
+1. On the landing page, click **Sign in with Google**.
+2. Choose your Google account in the popup and approve access.
+3. You are taken to your task dashboard. Your name and profile picture appear in the header.
 
-- Click the **Sign in with Google** button on the home screen.
-- When Firebase credentials are provided in `.env`, Google's authentication popup will prompt you to select your account.
-- When running locally before configuring Firebase (with placeholder keys in `.env`), the app automatically provides a seamless test session so you can test all task features immediately without blocker.
-- Once authenticated, you will be redirected to your personal task list.
-- If logged out, the dashboard is protected and redirects back to the login screen.
+**Troubleshooting login**
 
----
+- If nothing happens, check that your browser is not blocking popups for this site.
+- If you see an unauthorized domain error, the site's domain has not been added to Firebase Authorized Domains (see Setup).
 
-## 4. Assumptions Made
+## 3. Important Assumptions
 
-- **Task Fields**: Each task record stores `title` (required, trimmed, max 100 characters), `createdAt` (server timestamp), `status` (string enum), and `userId` (Firebase Auth UID).
-- **Default Status**: Newly created tasks automatically default to `Planned`.
-- **User Isolation**: Users can view and modify only tasks where `userId == auth.uid`.
-- **Sorting**: Tasks are sorted newest first using the `createdAt` timestamp.
-- **Form Validation**: Empty or whitespace-only task titles are blocked, character limits are tracked in real-time, and double-submissions are disabled while saving.
-- **Security**: Cloud Firestore rules strictly enforce authentication and ownership on document read, create, and update operations.
+The requirements left some details open. These decisions were made:
 
----
+| Gap in requirements | Decision |
+|---|---|
+| Who can see which tasks? | Each user sees **only their own tasks**. Enforced in the UI query and by Firestore security rules. |
+| Task fields | `title`, `status`, `createdAt`, `userId`. No description, due date or priority (out of scope). |
+| Default status | New tasks are always **Planned**. |
+| Title rules | Required, trimmed, maximum 100 characters. Empty or whitespace-only titles are rejected. |
+| Ordering | Newest tasks first. |
+| How is status changed? | A dropdown on each task. Any status can move to any other status (no forced order). |
+| Duplicate submissions | The add button is disabled while a task is saving to prevent double entries. |
+| Logged-out users | Redirected to the login screen. |
+| Feedback to the user | Loading state, empty state ("No tasks yet") and friendly error messages are shown. |
+| Missing Firebase config | If no Firebase keys are found, the app runs in a **local dev mode** for development only. The deployed app uses real Firebase. |
 
-## 5. Known Limitations
+## 4. Known Limitations
 
-- **No Delete or Title Editing**: By design, task deletion and editing task titles are out of scope.
-- **No Due Dates or Priorities**: Tasks only support status tracking (`Planned`, `In Progress`, `Complete`).
-- **No Offline Mode**: Requires an active internet connection to authenticate and communicate with Cloud Firestore.
-- **No Real-Time Collaboration**: Task lists are strictly private per user; tasks cannot be shared with other users.
+- Tasks cannot be deleted, and titles cannot be edited after creation (kept out of scope on purpose).
+- No offline mode. An internet connection is required.
+- No sharing or collaboration. Tasks are private to each Google account.
+- Google is the only sign-in method.
+- No search, filter, pagination, due dates or priorities.
+- Not tested on very old browsers.
 
----
+## 5. Important Notes and Warnings
 
-## 6. Important Notes & Warnings
+- A **Google account is required** to use the app.
+- Your tasks are tied to the Google account you sign in with. Signing in with a different account shows a different (empty) list.
+- Do not share your `.env` file or commit it to GitHub. It is listed in `.gitignore`.
+- Do not enter sensitive or confidential information in task titles.
+- Firebase web config values are not secret by themselves, but access to data is protected by the Firestore security rules in `firestore.rules`. Do not loosen these rules.
 
-- **Keep `.env` Secret**: Never commit `.env` or share your Firebase API keys and secrets publicly.
-- **Google Account Required**: An active Google account is mandatory to access the application.
-- **Account-Bound Data**: Your tasks are permanently tied to your specific Google Account UID. Logging in with a different account will display a separate, empty task list.
-
----
-
-## 7. Setup & Deployment Instructions
+## 6. Setup Instructions
 
 ### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm (v9 or higher)
-- A Google Firebase account (free tier / Spark plan)
 
-### Step 1: Clone & Install Dependencies
-```bash
-git clone <repository-url>
-cd Kovai.co
-npm install
-```
+- Node.js (LTS) and npm
+- A Google account
+- A free Firebase project
 
-### Step 2: Set Up Firebase Project
-1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
-2. Under **Build > Authentication**, enable the **Google** sign-in provider.
-3. Under **Build > Firestore Database**, click **Create database** (start in production or test mode).
-4. Deploy the security rules from `firestore.rules` under Firestore **Rules** tab.
-5. In **Project Settings > General**, under *Your apps*, register a new **Web app** (`</>`).
-6. Copy the Firebase configuration object keys.
+### Steps
 
-### Step 3: Configure Environment Variables
-Create a `.env` file in the project root (or copy `.env.example`):
-```bash
-cp .env.example .env
-```
-Populate `.env` with your Firebase web app keys:
-```env
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-### Step 4: Run Locally
-```bash
-npm run dev
-```
-Open `http://localhost:5173` in your browser.
-
-### Step 5: Build & Deploy
-
-#### Option A: Firebase Hosting
-1. Install Firebase CLI globally (if not already installed):
+1. **Clone and install**
    ```bash
-   npm install -g firebase-tools
-   ```
-2. Log in and initialize:
-   ```bash
-   firebase login
-   firebase use --add <your-firebase-project-id>
-   ```
-3. Build and deploy:
-   ```bash
-   npm run build
-   firebase deploy
+   git clone https://github.com/aswethcr/task-manager.git
+   cd task-manager
+   npm install
    ```
 
-#### Option B: Vercel
-1. Install Vercel CLI or import the repository in the Vercel Dashboard.
-2. Set the build command to `npm run build` and output directory to `dist`.
-3. Add the `VITE_FIREBASE_*` environment variables in your Vercel Project Settings.
-4. Run `vercel --prod` to deploy.
+2. **Create a Firebase project** at https://console.firebase.google.com (Analytics is not needed).
 
+3. **Enable Google sign-in:** Authentication, then Sign-in method, then Google, then Enable and choose a support email, then Save.
+
+4. **Create Firestore:** Firestore Database, then Create database, then choose a region and Production mode.
+
+5. **Publish security rules:** open the Rules tab, paste the contents of `firestore.rules` from this repo, and click Publish.
+
+6. **Register a web app:** Project settings, then Your apps, then the web icon (`</>`). Copy the config values.
+
+7. **Create your `.env` file:** copy `.env.example` to `.env` and fill it in:
+   ```
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   ```
+   No quotes and no spaces around `=`.
+
+8. **Run locally**
+   ```bash
+   npm run dev
+   ```
+   Open http://localhost:5173. Restart the dev server any time you change `.env`.
+
+### Deploy to Vercel
+
+1. Push the repo to GitHub (make sure `.env` is not included).
+2. On https://vercel.com, choose Add New, then Project, and import the repo. Framework preset: **Vite** (build `npm run build`, output `dist`).
+3. Add the six `VITE_FIREBASE_*` variables in Environment Variables, then Deploy.
+4. In Firebase, go to Authentication, then Settings, then Authorized domains, and add your Vercel domain (for example `task-manager-frxe.vercel.app`, without `https://`). Without this, Google login fails on the live site.
+
+## Project Structure
+
+```
+src/                 React app source (App.jsx, firebase.js, index.css)
+firestore.rules      Firestore security rules (per-user access)
+.env.example         Template for environment variables
+AI_USAGE.md          Summary of AI tool usage
+```
