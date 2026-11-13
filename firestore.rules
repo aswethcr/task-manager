@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /tasks/{taskId} {
+      // Users can only read tasks belonging to them
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+
+      // Users can only create tasks where userId matches their authenticated UID
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.title is string
+                    && request.resource.data.title.size() > 0
+                    && request.resource.data.title.size() <= 100
+                    && request.resource.data.status in ['Planned', 'In Progress', 'Complete'];
+
+      // Users can only update their own tasks and cannot reassign userId
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status in ['Planned', 'In Progress', 'Complete'];
+
+      // Users can only delete their own tasks (if delete were permitted, though out of app scope)
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+  }
+}
+
